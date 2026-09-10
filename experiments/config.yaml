@@ -6,3 +6,7 @@ seed: 42
 history_days: 150      # total synthetic days generated
 holdout_days: 14        # last N days held out as ground truth to forecast against
 base_price: 82.0        # starting synthetic oil price ($/bbl)
+
+# Crisis-scenario stress test parameters (crisis_scenario block in results)
+crisis_shock_pct: 18.0          # oil price shock applied during the stress test
+crisis_disruption_factor: 0.7   # disruption factor applied during the stress test
