@@ -1,0 +1,6 @@
+[lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]  # line length — frontend.html string blocks and long prompts make this noisy
+
+[lint.per-file-ignores]
+"tests/*" = ["F401"]

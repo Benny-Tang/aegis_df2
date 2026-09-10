@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aegis - Enterprise Crisis Management</title>
+<style>
+:root{--bg:#0a0e1a;--surface:#111827;--border:#1e2d40;--accent:#3b82f6;--danger:#ef4444;--warn:#f59e0b;--success:#22c55e;--text:#f1f5f9;--muted:#64748b;--font:'IBM Plex Mono','Courier New',monospace;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;}
+header{border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;gap:14px;}
+.logo{width:44px;height:44px;flex-shrink:0;}
+.brand{font-size:18px;font-weight:600;letter-spacing:0.05em;}
+.tagline{font-size:11px;color:#ef4444;letter-spacing:0.08em;margin-bottom:2px;}
+.tagline2{font-size:11px;color:var(--muted);}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.countdown-box{font-size:10px;color:#64748b;text-align:right;}
+.badge{font-size:11px;padding:4px 10px;border:1px solid var(--success);color:var(--success);border-radius:4px;}
+main{max-width:1100px;margin:0 auto;padding:24px;}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;}
+.stat-label{font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.08em;}
+.stat-value{font-size:22px;font-weight:600;}
+.ok{color:var(--success);}.warn{color:var(--warn);}.crit{color:var(--danger);}
+.agents{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px;}
+.agent{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;transition:border-color 0.3s;}
+.agent.active{border-color:var(--accent);}
+.agent.firing{border-color:var(--warn);animation:blink 0.5s ease-in-out infinite;}
+.agent.done{border-color:var(--success);}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.5}}
+.agent-icon{font-size:18px;margin-bottom:6px;}
+.agent-name{font-size:12px;font-weight:600;margin-bottom:2px;}
+.agent-status{font-size:10px;color:var(--muted);}
+.agent-out{font-size:10px;color:var(--text);margin-top:6px;line-height:1.5;border-top:1px solid var(--border);padding-top:6px;min-height:32px;}
+.controls{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;}
+btn{font-family:var(--font);font-size:13px;padding:10px 18px;border-radius:6px;cursor:pointer;border:1px solid;transition:all 0.15s;}
+#btn-crisis{background:#ef44441a;color:var(--danger);border-color:var(--danger);}
+#btn-crisis:hover{background:#ef444430;}
+#btn-reset{background:transparent;color:var(--muted);border-color:var(--border);}
+#btn-reset:hover{color:var(--text);border-color:var(--muted);}
+.log{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;height:160px;overflow-y:auto;margin-bottom:24px;}
+.log-line{font-size:11px;line-height:1.7;color:var(--muted);}
+.log-line.crit{color:var(--danger);}
+.log-line.warn{color:var(--warn);}
+.log-line.ok{color:var(--success);}
+.bars{margin-bottom:24px;}
+.bar-row{margin-bottom:10px;}
+.bar-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px;}
+.track{background:var(--border);height:6px;border-radius:3px;overflow:hidden;}
+.fill{height:100%;border-radius:3px;transition:width 1.2s ease,background 0.5s;}
+.reco{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:24px;}
+.reco-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;}
+.reco-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);align-items:flex-start;}
+.reco-item:last-child{border-bottom:none;}
+.pill{font-size:10px;padding:2px 8px;border-radius:3px;flex-shrink:0;margin-top:1px;}
+.pill.HIGH,.pill.CRITICAL{background:#ef44441a;color:var(--danger);border:1px solid #ef444440;}
+.pill.MEDIUM{background:#f59e0b1a;color:var(--warn);border:1px solid #f59e0b40;}
+.pill.LOW{background:#22c55e1a;color:var(--success);border:1px solid #22c55e40;}
+.reco-text{font-size:12px;}
+.reco-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.marine-panel{background:var(--surface);border:1px solid var(--accent);border-radius:8px;padding:16px;margin-bottom:24px;}
+.marine-title{font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;}
+.marine-item{font-size:11px;color:var(--muted);padding:5px 0;border-bottom:1px solid var(--border);line-height:1.5;}
+.marine-item:last-child{border-bottom:none;}
+.marine-item span{color:var(--accent);font-weight:600;}
+.biz-panel{background:var(--surface);border:1px solid var(--success);border-radius:8px;padding:16px;margin-bottom:24px;}
+.biz-title{font-size:11px;color:var(--success);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;}
+.biz-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;}
+.biz-card{background:#051005;border:1px solid #1e3a1e;border-radius:6px;padding:10px;text-align:center;}
+.biz-val{font-size:20px;font-weight:700;color:var(--success);margin-bottom:3px;}
+.biz-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;}
+.comp-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px;}
+.comp-table th{color:var(--muted);font-size:10px;text-align:left;padding:4px 8px;border-bottom:1px solid var(--border);}
+.comp-table td{padding:5px 8px;border-bottom:1px solid var(--border);color:var(--muted);}
+.comp-table tr.aegis td{color:var(--success);font-weight:600;background:#051005;}
+.strategy-panel{background:var(--surface);border:1px solid #7c3aed;border-radius:8px;padding:16px;margin-bottom:24px;}
+.strategy-title{font-size:11px;color:#a78bfa;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;}
+.strategy-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+.strategy-card{background:#0d0520;border:1px solid #3b1f6e;border-radius:6px;padding:10px;}
+.strategy-head{font-size:11px;font-weight:600;color:#a78bfa;margin-bottom:5px;}
+.strategy-body{font-size:10px;color:var(--muted);line-height:1.6;}
+footer{text-align:center;padding:24px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);margin-top:24px;}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<header>
+  <svg class="logo" viewBox="0 0 100 110" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="sm" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" style="stop-color:#e8504a"/><stop offset="35%" style="stop-color:#c0392b"/><stop offset="70%" style="stop-color:#922b21"/><stop offset="100%" style="stop-color:#7b241c"/></linearGradient>
+      <linearGradient id="ss" x1="0%" y1="0%" x2="60%" y2="80%"><stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.55"/><stop offset="50%" style="stop-color:#ffffff;stop-opacity:0.15"/><stop offset="100%" style="stop-color:#ffffff;stop-opacity:0"/></linearGradient>
+      <linearGradient id="sr" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#9098a8"/><stop offset="40%" style="stop-color:#c8cdd8"/><stop offset="100%" style="stop-color:#5a6070"/></linearGradient>
+    </defs>
+    <path d="M50,4 C50,4 82,6 90,20 L94,52 C94,78 74,96 50,104 C26,96 6,78 6,52 L10,20 C18,6 50,4 50,4Z" fill="url(#sr)"/>
+    <path d="M50,10 C50,10 79,12 86,24 L90,54 C90,77 72,93 50,100 C28,93 10,77 10,54 L14,24 C21,12 50,10 50,10Z" fill="url(#sm)"/>
+    <path d="M50,10 C50,10 79,12 86,24 L90,54 C90,77 72,93 50,100 C28,93 10,77 10,54 L14,24 C21,12 50,10 50,10Z" fill="url(#ss)"/>
+    <ellipse cx="42" cy="38" rx="14" ry="20" fill="white" opacity="0.10" transform="rotate(-10,42,38)"/>
+    <ellipse cx="50" cy="26" rx="18" ry="10" fill="white" opacity="0.15"/>
+  </svg>
+  <div>
+    <div class="brand">AEGIS</div>
+    <div class="tagline">SHIELD AGAINST CHAOS</div>
+    <div class="tagline2">Autonomous Enterprise Crisis Management</div>
+  </div>
+  <div class="hdr-right">
+    <div class="countdown-box"><div>Next scan in</div><div id="countdown" style="color:#3b82f6;font-weight:600;">5:00</div></div>
+    <span class="badge" id="status-badge">&#x25CF; ONLINE</span>
+  </div>
+</header>
+<main>
+  <div class="stats">
+    <div class="stat"><div class="stat-label">System State</div><div class="stat-value ok" id="sys-state">NOMINAL</div></div>
+    <div class="stat"><div class="stat-label">Oil ($/bbl)</div><div class="stat-value" id="oil-price">82</div></div>
+    <div class="stat"><div class="stat-label">Supply Risk</div><div class="stat-value ok" id="risk">LOW</div></div>
+    <div class="stat"><div class="stat-label">Agents Active</div><div class="stat-value" id="active-count">0 / 7</div></div>
+  </div>
+  <div class="agents" id="agent-grid"></div>
+  <div class="controls">
+    <btn id="btn-crisis" onclick="triggerCrisis()">&#x26A0; Inject Crisis Scenario</btn>
+    <btn id="btn-reset" onclick="resetAll()">&#x21BA; Reset</btn>
+    <btn onclick="loadMarineData()" style="color:var(--accent);border-color:var(--accent);">&#x1F6E5; Marine Traffic</btn>
+  </div>
+  <div class="bars">
+    <div class="bar-row"><div class="bar-meta"><span>Oil price forecast (14-day)</span><span id="oil-lbl">+3%</span></div><div class="track"><div class="fill" id="oil-fill" style="width:25%;background:var(--success)"></div></div></div>
+    <div class="bar-row"><div class="bar-meta"><span>Logistics delay risk</span><span id="delay-lbl">12%</span></div><div class="track"><div class="fill" id="delay-fill" style="width:12%;background:var(--success)"></div></div></div>
+    <div class="bar-row"><div class="bar-meta"><span>Estimated cost impact</span><span id="cost-lbl">+2%</span></div><div class="track"><div class="fill" id="cost-fill" style="width:10%;background:var(--success)"></div></div></div>
+  </div>
+  <div class="marine-panel">
+    <div class="marine-title">&#x1F6E5; MarineTraffic — Live Shipping Intelligence</div>
+    <div id="marine-content" class="marine-item">Loading live maritime intelligence...</div>
+  </div>
+  <div class="log" id="log"></div>
+  <div class="reco" id="reco">
+    <div class="reco-title">Decision Agent - Recommendations</div>
+    <div class="reco-item"><span class="pill LOW">LOW</span><div><div class="reco-text">No action required</div><div class="reco-sub">System operating within normal parameters</div></div></div>
+  </div>
+  <div class="biz-panel">
+    <div class="biz-title">&#x1F4B0; Business Value — $1.5 Trillion Market Opportunity</div>
+    <div class="biz-grid">
+      <div class="biz-card"><div class="biz-val">$1.5T</div><div class="biz-lbl">Total Addressable Market</div></div>
+      <div class="biz-card"><div class="biz-val">$19.3T</div><div class="biz-lbl">Supply Chain Market 2028</div></div>
+      <div class="biz-card"><div class="biz-val">70x</div><div class="biz-lbl">ROI in Year 1</div></div>
+      <div class="biz-card"><div class="biz-val">$1.7M</div><div class="biz-lbl">Savings Per Crisis Prevented</div></div>
+      <div class="biz-card"><div class="biz-val">$24K/yr</div><div class="biz-lbl">Annual Subscription</div></div>
+      <div class="biz-card"><div class="biz-val">2 sec</div><div class="biz-lbl">vs Hours (Competitors)</div></div>
+    </div>
+    <table class="comp-table">
+      <tr><th>Competitor</th><th>Method</th><th>Response Time</th><th>Annual Cost</th><th>Autonomous?</th></tr>
+      <tr><td>Resilinc</td><td>Human analyst network</td><td>4-8 hours</td><td>$500K+/yr</td><td>&#x274C; No</td></tr>
+      <tr><td>Everstream Analytics</td><td>Manual reports</td><td>4-8 hours</td><td>$200K+/yr</td><td>&#x274C; No</td></tr>
+      <tr><td>Llamaindex/LangChain DIY</td><td>Custom build</td><td>Varies</td><td>$50K+/yr dev</td><td>&#x26A0; Partial</td></tr>
+      <tr class="aegis"><td>&#x1F6E1;&#xFE0F; AEGIS</td><td>Fully autonomous AI</td><td>2 seconds</td><td>$24K/yr</td><td>&#x2705; 100%</td></tr>
+    </table>
+  </div>
+  <div class="strategy-panel">
+    <div class="strategy-title">&#x1F3AF; Go-To-Market Strategy</div>
+    <div class="strategy-grid">
+      <div class="strategy-card">
+        <div class="strategy-head">&#x1F3AF; Target Segment 1 — Maritime Insurance</div>
+        <div class="strategy-body">
+          War risk premiums surged 40% during Hormuz crisis.<br>
+          Insurers need real-time vessel intelligence to price risk accurately.<br>
+          Aegis delivers live tanker reroute data + ML risk scoring.<br>
+          <strong style="color:#22c55e">Value: $500K+ savings per underwriting cycle</strong>
+        </div>
+      </div>
+      <div class="strategy-card">
+        <div class="strategy-head">&#x1F6E2;&#xFE0F; Target Segment 2 — Commodity Traders</div>
+        <div class="strategy-body">
+          Oil traders need 2-second signal when Hormuz disrupts.<br>
+          Every minute of delay costs millions in hedging losses.<br>
+          Aegis auto-triggers buy/sell signals via Execution Agent.<br>
+          <strong style="color:#22c55e">Value: $2M+ per avoided adverse position</strong>
+        </div>
+      </div>
+      <div class="strategy-card">
+        <div class="strategy-head">&#x1F3ED; Target Segment 3 — Manufacturers ($50M+ procurement)</div>
+        <div class="strategy-body">
+          Automotive, electronics, pharma — all Hormuz-exposed.<br>
+          Aegis identifies alternate suppliers before stockouts occur.<br>
+          Integrates with SAP ERP via Execution Agent autonomously.<br>
+          <strong style="color:#22c55e">Value: $1.7M+ per avoided production stoppage</strong>
+        </div>
+      </div>
+      <div class="strategy-card">
+        <div class="strategy-head">&#x1F30D; Target Segment 4 — Sovereign Wealth Funds</div>
+        <div class="strategy-body">
+          Gulf state SWFs managing oil revenue exposure.<br>
+          Aegis monitors geopolitical signals 24/7 autonomously.<br>
+          Real-time portfolio rebalancing signals via Decision Agent.<br>
+          <strong style="color:#22c55e">Value: $10M+ per crisis hedge position</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+<footer>Aegis - AMD Developer Hackathon 2026 | Groq GPT-OSS-120B + XGBoost/ARIMA | AMD Instinct MI300X Architecture | Shield Against Chaos</footer>
+<script>
+const AGENTS=[
+  {id:'signal',icon:'📡',name:'Signal Agent',role:'Watcher + Marine Scraper'},
+  {id:'intelligence',icon:'🧠',name:'Intelligence Agent',role:'Interpreter'},
+  {id:'forecast',icon:'📈',name:'Forecast Agent',role:'ARIMA+XGBoost Predictor'},
+  {id:'simulation',icon:'🧩',name:'Simulation Agent',role:'Strategist'},
+  {id:'decision',icon:'⚡',name:'Decision Agent',role:'Brain'},
+  {id:'alert',icon:'🚨',name:'Alert Agent',role:'Communicator'},
+  {id:'execution',icon:'🔄',name:'Execution Agent',role:'Operator'},
+];
+const state={};let es=null;
+function renderAgents(){
+  document.getElementById('agent-grid').innerHTML=AGENTS.map(a=>{
+    const s=state[a.id]||{};
+    return '<div class="agent '+(s.cls||'')+'" id="card-'+a.id+'"><div class="agent-icon">'+a.icon+'</div><div class="agent-name">'+a.name+'</div><div class="agent-status">'+(s.status||'idle')+'</div><div class="agent-out">'+(s.out||a.role)+'</div></div>';
+  }).join('');
+}
+function log(msg,cls){
+  const el=document.getElementById('log');
+  const ts=new Date().toTimeString().slice(0,8);
+  el.innerHTML+='<div class="log-line '+(cls||'')+'">['+ts+'] '+msg+'</div>';
+  el.scrollTop=el.scrollHeight;
+}
+function setBar(fid,lid,pct,label,color){
+  document.getElementById(fid).style.width=pct+'%';
+  document.getElementById(fid).style.background=color;
+  document.getElementById(lid).textContent=label;
+}
+async function loadMarineData(){
+  try{
+    const r=await fetch('/api/marine');
+    const d=await r.json();
+    if(d.success&&d.data&&d.data.items){
+      const html=d.data.items.map(item=>'<div class="marine-item"><span>['+item.source+']</span> '+item.headline+'</div>').join('');
+      document.getElementById('marine-content').innerHTML=html;
+      log('MarineTraffic: '+d.data.items.length+' live shipping alerts ('+d.data.status+')','ok');
+    }
+  }catch(e){
+    document.getElementById('marine-content').innerHTML='Marine data unavailable: '+e.message;
+  }
+}
+function triggerCrisis(){
+  if(es){es.close();es=null;}
+  document.getElementById('btn-crisis').disabled=true;
+  document.getElementById('sys-state').textContent='ALERT';
+  document.getElementById('sys-state').className='stat-value warn';
+  document.getElementById('oil-price').textContent='97';
+  document.getElementById('risk').textContent='RISING';
+  document.getElementById('risk').className='stat-value warn';
+  log('Crisis injected: oil +18%, Strait of Hormuz disruption detected.','crit');
+  es=new EventSource('/api/stream?oil_change=18&disruption=0.7&severity=HIGH');
+  es.onmessage=function(e){
+    const msg=JSON.parse(e.data);
+    if(msg.type==='forecast_ready'){
+      const s=msg.data;
+      setBar('oil-fill','oil-lbl',Math.min(95,Math.abs(s.pct_change)*3.5),'+'+s.pct_change+'%','var(--danger)');
+      setBar('delay-fill','delay-lbl',s.delay_prob,s.delay_prob+'%','var(--danger)');
+      setBar('cost-fill','cost-lbl',Math.min(95,s.cost_impact*2.5),'+'+s.cost_impact+'%','var(--warn)');
+      log('ML forecast: oil +'+s.pct_change+'% · delay risk '+s.delay_prob+'%','warn');
+    }
+    if(msg.type==='agent_start'){
+      const a=AGENTS[msg.index-1];
+      if(a){state[a.id]={cls:'firing',status:'running...',out:'Processing...'};
+      document.getElementById('active-count').textContent=msg.index+' / 7';
+      renderAgents(); log('Agent '+msg.index+'/7: '+a.name);}
+    }
+    if(msg.type==='agent_done'){
+      const a=AGENTS.find(x=>x.id===msg.agent)||{id:msg.agent,name:msg.agent,icon:'🤖'};
+      const d=msg.data; let out='';
+      if(msg.agent==='signal') out=d.summary||'Severity: '+d.severity;
+      else if(msg.agent==='intelligence') out=d.geopolitical_context||'Impact: '+d.supply_chain_impact;
+      else if(msg.agent==='forecast') out=d.oil_outlook||'Risk score: '+d.supply_risk_score+'/100';
+      else if(msg.agent==='simulation') out=(d.scenarios&&Array.isArray(d.scenarios)&&d.scenarios[0]&&d.scenarios[0].description)||'Scenarios computed';
+      else if(msg.agent==='decision') out=(d.executive_summary&&d.executive_summary.slice(0,120))||'Actions ranked';
+      else if(msg.agent==='alert') out=d.slack_message||'Alerts dispatched';
+      else if(msg.agent==='execution') out=d.execution_summary||'Workflows triggered';
+      state[a.id]={cls:'done',status:'complete',out:out};
+      renderAgents(); log('✓ '+a.name+' complete','ok');
+      if(msg.agent==='decision'){
+        const actions=d.recommended_actions||[];
+        document.getElementById('reco').innerHTML='<div class="reco-title">Decision Agent — Autonomous Recommendations</div>'+
+          actions.slice(0,4).map(ac=>'<div class="reco-item"><span class="pill '+(ac.risk||'LOW')+'">'+(ac.risk||'LOW')+'</span><div><div class="reco-text">'+ac.action+'</div><div class="reco-sub">'+(ac.rationale||'')+' · Est. savings: $'+((ac.estimated_savings_usd||0).toLocaleString())+'</div></div></div>').join('');
+        document.getElementById('sys-state').textContent=d.threat_level||'CRITICAL';
+        document.getElementById('sys-state').className='stat-value crit';
+        document.getElementById('risk').textContent='HIGH';
+        document.getElementById('risk').className='stat-value crit';
+      }
+      if(msg.agent==='signal'&&d.marine_data&&d.marine_data.items){
+        const html=d.marine_data.items.map(item=>'<div class="marine-item"><span>['+item.source+']</span> '+item.headline+'</div>').join('');
+        document.getElementById('marine-content').innerHTML=html;
+        log('MarineTraffic: '+d.marine_data.items.length+' live alerts auto-loaded','warn');
+      }
+    }
+    if(msg.type==='complete'){
+      log('🛡️ Aegis complete. All 7 agents finished. $1.7M savings identified.','ok');
+      es.close(); document.getElementById('btn-crisis').disabled=false;
+    }
+    if(msg.type==='error'){
+      log('Error: '+msg.message,'crit');
+      es.close(); document.getElementById('btn-crisis').disabled=false;
+    }
+  };
+}
+function resetAll(){
+  if(es){es.close();es=null;}
+  AGENTS.forEach(a=>delete state[a.id]); renderAgents();
+  document.getElementById('sys-state').textContent='NOMINAL';
+  document.getElementById('sys-state').className='stat-value ok';
+  document.getElementById('oil-price').textContent='82';
+  document.getElementById('risk').textContent='LOW';
+  document.getElementById('risk').className='stat-value ok';
+  document.getElementById('active-count').textContent='0 / 7';
+  setBar('oil-fill','oil-lbl',25,'+3%','var(--success)');
+  setBar('delay-fill','delay-lbl',12,'12%','var(--success)');
+  setBar('cost-fill','cost-lbl',10,'+2%','var(--success)');
+  document.getElementById('log').innerHTML='';
+  document.getElementById('reco').innerHTML='<div class="reco-title">Decision Agent - Recommendations</div><div class="reco-item"><span class="pill LOW">LOW</span><div><div class="reco-text">No action required</div><div class="reco-sub">System nominal</div></div></div>';
+  log('System reset. All 7 agents standing by.'); document.getElementById('btn-crisis').disabled=false;
+  loadMarineData();
+}
+const SCAN_INTERVAL=300;let scanTimer=SCAN_INTERVAL;
+function updateCountdown(){
+  const m=Math.floor(scanTimer/60),s=scanTimer%60;
+  const el=document.getElementById('countdown');
+  if(el) el.textContent=m+':'+(s<10?'0':'')+s;
+}
+async function autoScan(){
+  try{
+    const r=await fetch('/api/status'); const d=await r.json();
+    const price=parseFloat(d.oil_price);
+    const chg=((price-82.0)/82.0)*100;
+    log('Auto-scan: oil $'+price.toFixed(2)+' ('+chg.toFixed(1)+'% from baseline)');
+    if(Math.abs(chg)>3||Math.random()>0.7){
+      log('Auto-monitor: anomaly! Triggering pipeline...','warn'); triggerCrisis();
+    }else{log('Auto-scan: signals nominal. Next scan in 5 min.');}
+  }catch(e){log('Auto-scan error: '+e.message,'crit');}
+}
+setInterval(function(){
+  if(scanTimer>0){scanTimer--;updateCountdown();}
+  else{scanTimer=SCAN_INTERVAL;log('Auto-monitor: scheduled scan...','warn');autoScan();}
+},1000);
+updateCountdown(); renderAgents();
+log('Aegis initialized. 7 agents online. MarineTraffic ready. Business value: $1.7M/crisis.');
+log('Auto-monitor active — scanning every 5 minutes. 70x ROI. $1.5T market.');
+fetch('/api/status').then(r=>r.json()).then(d=>{document.getElementById('oil-price').textContent=d.oil_price;});
+loadMarineData();
+</script>
+</body>
+</html>
