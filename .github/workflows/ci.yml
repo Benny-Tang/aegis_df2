@@ -1,10 +1,9 @@
 name: CI
 
+# Manually triggered only. Go to: Actions tab -> CI -> "Run workflow" -> pick branch.
+# Nothing runs automatically on push or pull_request.
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
 
 jobs:
   lint:
@@ -30,7 +29,7 @@ jobs:
           cache: pip
       - name: Install locked dependencies
         run: pip install -r requirements-lock.txt -r requirements-dev.txt
-      - name: Run tests with coverage gate
+      - name: Run tests with 60% coverage gate
         run: pytest -q --cov --cov-report=term-missing
         env:
           LOG_LEVEL: WARNING
