@@ -9,6 +9,7 @@ python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
 cp .env.example .env   # then fill in GROQ_API_KEY
+This repo standardizes on Python 3.12; the lockfile (requirements-lock.txt) must be regenerated with pip-compile --generate-hashes under Python 3.12.
 ```
 
 ## Running the app
