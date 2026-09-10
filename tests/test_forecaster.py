@@ -38,6 +38,31 @@ def test_forecast_summary_has_expected_keys(forecaster):
         assert key in summary
 
 
+def test_forecast_output_matches_validated_schema(forecaster):
+    """forecast() returns the Pydantic-validated ForecastResult shape."""
+    result = forecaster.forecast(horizon_days=7, crisis_shock=0.0, disruption_factor=0.0)
+    for key in ("base_price", "shocked_price", "horizon_days", "gpu_accelerated", "device", "forecast", "summary", "model"):
+        assert key in result
+    for day in result["forecast"]:
+        assert set(day) == {"date", "price", "lower", "upper"}
+
+
+def test_blend_weight_overrides_isolate_model_contributions(forecaster):
+    """blend_weight=0/1 must reproduce pure ARIMA / pure XGBoost, and the
+    default crisis blend must equal the explicit weighted combination —
+    this pins the ablation logic the experiment relies on."""
+    w0 = forecaster.forecast(horizon_days=7, crisis_shock=18.0, disruption_factor=0.7, blend_weight=0.0)
+    w1 = forecaster.forecast(horizon_days=7, crisis_shock=18.0, disruption_factor=0.7, blend_weight=1.0)
+    default = forecaster.forecast(horizon_days=7, crisis_shock=18.0, disruption_factor=0.7)
+    p0 = [d["price"] for d in w0["forecast"]]
+    p1 = [d["price"] for d in w1["forecast"]]
+    pdef = [d["price"] for d in default["forecast"]]
+    assert p0 != p1  # the override actually changes the forecast
+    for i in range(7):
+        # crisis default weight is 0.7: 0.7*xgb + 0.3*arima (2-dp rounding tol)
+        assert abs(0.7 * p1[i] + 0.3 * p0[i] - pdef[i]) < 0.02
+
+
 def test_get_forecaster_returns_singleton():
     fc1 = get_forecaster()
     fc2 = get_forecaster()
@@ -50,3 +75,4 @@ def test_forecast_horizon_bounds_respected(forecaster):
     itself should also behave sanely at the edges."""
     result = forecaster.forecast(horizon_days=1, crisis_shock=0.0, disruption_factor=0.0)
     assert len(result["forecast"]) == 1
+
