@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install dev tooling
+        run: pip install -r requirements-dev.txt
+      - name: Ruff lint
+        run: ruff check .
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install locked dependencies
+        run: pip install -r requirements-lock.txt -r requirements-dev.txt
+      - name: Run tests with coverage gate
+        run: pytest -q --cov --cov-report=term-missing
+        env:
+          LOG_LEVEL: WARNING
+
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install pip-audit
+        run: pip install pip-audit
+      - name: Dependency vulnerability scan
+        run: pip-audit -r requirements-lock.txt
