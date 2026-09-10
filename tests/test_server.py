@@ -28,6 +28,24 @@ def test_health_endpoint_returns_200_and_expected_keys():
     assert body["agents"] == 7
 
 
+def test_health_works_without_groq_api_key(monkeypatch):
+    """Dependency-free smoke test: the service must boot and answer
+    /health with no external credentials configured."""
+    monkeypatch.delenv("GROQ_API_KEY", raising=False)
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json()["status"] == "online"
+
+
+def test_ready_endpoint_reports_forecaster_state():
+    response = client.get("/ready")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["forecaster_ready"] is True
+    assert body["status"] == "ready"
+    assert "gpu" in body
+
+
 def test_forecast_endpoint_returns_200_and_expected_shape():
     response = client.post("/api/forecast", json={"oil_shock_pct": 0.0, "disruption_factor": 0.0, "horizon_days": 7})
     assert response.status_code == 200
