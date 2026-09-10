@@ -1,8 +1,13 @@
+"""
+Aegis - FastAPI service layer: REST endpoints + Server-Sent Events streaming
+for the 7-agent crisis-management pipeline.
+"""
 import json
 import logging
 import os
 import random
 import time
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from typing import Any, AsyncGenerator
 
@@ -50,7 +55,31 @@ _handler.setFormatter(JSONFormatter())
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"), handlers=[_handler])
 logger = logging.getLogger("aegis")
 
-app = FastAPI(title="Aegis", version="2.0.0")
+# --- Optional error tracking -------------------------------------------------
+# Enabled only when SENTRY_DSN is set. The service boots fully (and
+# credential-free) without it — sentry_sdk is an optional import.
+try:
+    import sentry_sdk
+
+    if os.environ.get("SENTRY_DSN"):
+        sentry_sdk.init(dsn=os.environ["SENTRY_DSN"], traces_sample_rate=0.2)
+        logger.info("Sentry error tracking enabled")
+except ImportError:
+    pass
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    logger.info("Aegis starting on AMD Developer Cloud...")
+    try:
+        get_forecaster()
+        logger.info("Forecaster ready")
+    except Exception as e:
+        logger.warning("Forecaster initialization warning: %s", e)
+    yield
+
+
+app = FastAPI(title="Aegis", version="2.0.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -95,6 +124,13 @@ class HealthResponse(BaseModel):
     forecast: str
 
 
+class ReadyResponse(BaseModel):
+    status: str
+    forecaster_ready: bool
+    gpu: bool
+    model: str
+
+
 class MarineResponse(BaseModel):
     success: bool
     data: dict[str, Any]
@@ -125,27 +161,15 @@ class StatusResponse(BaseModel):
 def _safe_error(exc: Exception, context: str) -> HTTPException:
     """
     Logs the full exception server-side (with traceback) but returns only a
-    generic, non-leaking message to the client. Previously, /api/crisis
-    returned traceback.format_exc() directly in the HTTP response body,
-    which can expose internal file paths, library versions, and other
-    implementation details to callers.
+    generic, non-leaking message to the client.
     """
     logger.exception("Error in %s: %s", context, exc)
     return HTTPException(status_code=500, detail=f"Internal error in {context}. See server logs for details.")
 
 
-@app.on_event("startup")
-async def startup():
-    logger.info("Aegis starting on AMD Developer Cloud...")
-    try:
-        get_forecaster()
-        logger.info("Forecaster ready")
-    except Exception as e:
-        logger.warning("Forecaster initialization warning: %s", e)
-
-
 @app.get("/health", response_model=HealthResponse)
 async def health():
+    """Liveness probe: process is up."""
     return HealthResponse(
         status="online",
         system="Aegis",
@@ -155,6 +179,19 @@ async def health():
         platform="AMD Developer Cloud",
         model=MODEL,
         forecast="ARIMA(2,1,2) + XGBoost hybrid",
+    )
+
+
+@app.get("/ready", response_model=ReadyResponse)
+async def ready():
+    """Readiness probe: /health says the process is up; /ready confirms the
+    heavy dependency (the fitted forecaster) is actually usable."""
+    fc = get_forecaster()
+    return ReadyResponse(
+        status="ready" if fc.fitted else "not_ready",
+        forecaster_ready=fc.fitted,
+        gpu=fc.gpu,
+        model=MODEL,
     )
 
 
@@ -270,3 +307,4 @@ async def status():
 async def index():
     with open(os.path.join(BASE_DIR, "frontend.html")) as f:
         return f.read()
+
