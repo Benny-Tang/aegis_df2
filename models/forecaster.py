@@ -2,14 +2,18 @@
 Aegis - ARIMA + XGBoost hybrid forecaster for oil price / supply-chain
 disruption scenarios. Runs on GPU (CUDA) if available, falls back to CPU.
 """
+import logging
 import subprocess
 import warnings
 from datetime import datetime, timedelta
 
 import numpy as np
 import pandas as pd
+from pydantic import BaseModel
 
 warnings.filterwarnings("ignore")
+
+logger = logging.getLogger("aegis.forecaster")
 
 try:
     import xgboost as xgb
@@ -64,6 +68,38 @@ def _features(df):
 FEAT = ["lag_1", "lag_3", "lag_7", "lag_14", "rm7", "rs7", "rm14", "pct3", "dow"]
 
 
+# --- Validated output schema -------------------------------------------------
+# Guarantees every consumer (API layer, experiments, dashboard) sees a
+# consistent, type-checked structure from forecast().
+
+class ForecastPoint(BaseModel):
+    date: str
+    price: float
+    lower: float
+    upper: float
+
+
+class ForecastSummary(BaseModel):
+    final_price: float
+    pct_change: float
+    peak_price: float
+    peak_day: int
+    risk_score: float
+    delay_prob: float
+    cost_impact: float
+
+
+class ForecastResult(BaseModel):
+    base_price: float
+    shocked_price: float
+    horizon_days: int
+    gpu_accelerated: bool
+    device: str
+    forecast: list[ForecastPoint]
+    summary: ForecastSummary
+    model: str
+
+
 class AegisForecaster:
     def __init__(self):
         self.arima = self.xgb = self.scaler = None
@@ -79,7 +115,8 @@ class AegisForecaster:
             return self
         try:
             self.arima = ARIMA(self.hist["price"], order=(2, 1, 2)).fit()
-        except Exception:
+        except Exception as e:
+            logger.warning("ARIMA fit failed, using drift fallback in forecast(): %s", e)
             self.arima = None
 
         fd = _features(self.hist)
@@ -147,7 +184,7 @@ class AegisForecaster:
         fp = prices[-1]
         pct = round((fp - base) / base * 100, 1)
 
-        return {
+        result = {
             "base_price": round(base, 2),
             "shocked_price": round(shocked, 2),
             "horizon_days": horizon_days,
@@ -168,6 +205,7 @@ class AegisForecaster:
             },
             "model": "ARIMA+XGBoost hybrid (GPU)" if self.gpu else "ARIMA+XGBoost hybrid (CPU)",
         }
+        return ForecastResult(**result).model_dump()
 
 
 _fc = None
