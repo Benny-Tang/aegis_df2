@@ -1,6 +1,55 @@
-<svg xmlns="http://www.w3.org/2000/svg" class="markmap mm-5mk89k-5" style="width: 100%; height: 100%;"><style>.markmap{--markmap-max-width: 9999px;--markmap-a-color: #0097e6;--markmap-a-hover-color: #00a8ff;--markmap-code-bg: #f0f0f0;--markmap-code-color: #555;--markmap-highlight-bg: #ffeaa7;--markmap-table-border: 1px solid currentColor;--markmap-font: 300 16px/20px sans-serif;--markmap-circle-open-bg: #fff;--markmap-text-color: #333;--markmap-highlight-node-bg: #ff02;font:var(--markmap-font);color:var(--markmap-text-color)}.markmap-link{fill:none}.markmap-node&gt;circle{cursor:pointer}.markmap-foreign{display:inline-block}.markmap-foreign p{margin:0}.markmap-foreign a{color:var(--markmap-a-color)}.markmap-foreign a:hover{color:var(--markmap-a-hover-color)}.markmap-foreign code{padding:.25em;font-size:calc(1em - 2px);color:var(--markmap-code-color);background-color:var(--markmap-code-bg);border-radius:2px}.markmap-foreign pre{margin:0}.markmap-foreign pre&gt;code{display:block}.markmap-foreign del{text-decoration:line-through}.markmap-foreign em{font-style:italic}.markmap-foreign strong{font-weight:700}.markmap-foreign mark{background:var(--markmap-highlight-bg)}.markmap-foreign table,.markmap-foreign th,.markmap-foreign td{border-collapse:collapse;border:var(--markmap-table-border)}.markmap-foreign img{display:inline-block}.markmap-foreign svg{fill:currentColor}.markmap-foreign&gt;div{width:var(--markmap-max-width);text-align:left}.markmap-foreign&gt;div&gt;div{display:inline-block}.markmap-highlight rect{fill:var(--markmap-highlight-node-bg)}.markmap-dark .markmap{--markmap-code-bg: #1a1b26;--markmap-code-color: #ddd;--markmap-circle-open-bg: #444;--markmap-text-color: #eee}</style><g transform="translate(20,300) scale(0.9080047789725209)"><path class="markmap-link" data-depth="3" data-path="1.2.3" d="M237,10.875C277,10.875,277,64.188,317,64.188" stroke-width="1.375" stroke="rgb(44, 160, 44)"/><path class="markmap-link" data-depth="2" data-path="1.2" d="M100,11.25C140,11.25,140,10.875,180,10.875" stroke-width="1.75" stroke="rgb(255, 127, 14)"/><g class="markmap-highlight"/><g data-depth="3" data-path="1.2.3" class="markmap-node" transform="translate(317, -63.5)"><line stroke="#2ca02c" stroke-width="1.375" x1="-1" x2="522" y1="127.6875" y2="127.6875"/><foreignObject class="markmap-foreign" x="8" y="0" style="opacity: 1;" width="504" height="127"><div xmlns="http://www.w3.org/1999/xhtml"><div xmlns="http://www.w3.org/1999/xhtml"><pre data-lines="4,11"><code class="language-bash">git <span class="hljs-built_in">clone</span> &lt;this-repo&gt;
-<span class="hljs-built_in">cd</span> aegis_df2
-python3.12 -m venv .venv &amp;&amp; <span class="hljs-built_in">source</span> .venv/bin/activate
-pip install -r requirements-lock.txt   <span class="hljs-comment"># full hashed closure (runtime + dev tooling)</span>
+# Contributing
+
+## Setup
+
+```bash
+git clone <this-repo>
+cd aegis_df3
+python3.12 -m venv .venv && source .venv/bin/activate
+pip install -r requirements-lock.txt   # full hashed closure (runtime + dev tooling)
 pip install -r requirements-dev.txt
-<span class="hljs-built_in">cp</span> .env.example .<span class="hljs-built_in">env</span>   <span class="hljs-comment"># then fill in GROQ_API_KEY</span></code></pre></div></div></foreignObject></g><g data-depth="2" data-path="1.2" class="markmap-node" transform="translate(180, -10)"><line stroke="#ff7f0e" stroke-width="1.75" x1="-1" x2="59" y1="20.875" y2="20.875"/><circle stroke-width="1.5" r="6" stroke="#ff7f0e" fill="var(--markmap-circle-open-bg)" cx="57" cy="20.875"/><foreignObject class="markmap-foreign" x="8" y="0" style="opacity: 1;" width="41" height="20"><div xmlns="http://www.w3.org/1999/xhtml"><div xmlns="http://www.w3.org/1999/xhtml">Setup</div></div></foreignObject></g><g data-depth="1" data-path="1" class="markmap-node" transform="translate(0, -10)"><line stroke="#1f77b4" stroke-width="2.5" x1="-1" x2="102" y1="21.25" y2="21.25"/><circle stroke-width="1.5" r="6" stroke="#1f77b4" fill="var(--markmap-circle-open-bg)" cx="100" cy="21.25"/><foreignObject class="markmap-foreign" x="8" y="0" style="opacity: 1;" width="84" height="20"><div xmlns="http://www.w3.org/1999/xhtml"><div xmlns="http://www.w3.org/1999/xhtml">Contributing</div></div></foreignObject></g></g></svg>
+cp .env.example .env                   # then fill in GROQ_API_KEY
+```
+
+This repo standardizes on Python 3.12. If you change `requirements.txt`,
+regenerate the lockfile under Python 3.12:
+
+```bash
+pip-compile requirements.txt requirements-dev.txt --generate-hashes -o requirements-lock.txt
+```
+
+## Running the app
+
+```bash
+uvicorn api.server:app --host 0.0.0.0 --port 8000 --reload
+```
+
+Or via Docker:
+
+```bash
+docker compose up
+```
+
+## Running tests and lint
+
+```bash
+pytest -q --cov --cov-report=term-missing
+ruff check .
+pip-audit -r requirements-lock.txt
+```
+
+All three run automatically in CI on every push and pull request
+(`.github/workflows/ci.yml`). The test step fails the build if coverage
+drops below 65%.
+
+## Commit conventions
+
+- Keep each feature or fix in its own small commit (or PR), including the
+  tests that verify it — avoid bulk commits that mix formatting,
+  refactors, and features together.
+- If you're pairing or a teammate contributes, please commit under your
+  own identity/email so the history reflects actual authorship.
+
+## Project structure
+
+See `README.md` for the architecture diagram and directory layout.
