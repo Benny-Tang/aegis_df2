@@ -34,7 +34,6 @@ AMD Instinct MI300X GPUs.
 |
 [Dashboard UI]
 
-
 ## Tech stack
 
 | Layer | Technology | Purpose |
