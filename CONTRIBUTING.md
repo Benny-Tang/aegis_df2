@@ -4,7 +4,7 @@
 
 ```bash
 git clone <this-repo>
-cd aegis_df3
+cd aegis_df4
 python3.12 -m venv .venv && source .venv/bin/activate
 pip install -r requirements-lock.txt   # full hashed closure (runtime + dev tooling)
 pip install -r requirements-dev.txt
