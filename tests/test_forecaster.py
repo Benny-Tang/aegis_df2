@@ -4,6 +4,7 @@ forecasting model at the core of Aegis's crisis simulation.
 """
 import pytest
 
+import models.forecaster as forecaster_module
 from models.forecaster import AegisForecaster, get_forecaster
 
 
@@ -63,6 +64,19 @@ def test_blend_weight_overrides_isolate_model_contributions(forecaster):
         assert abs(0.7 * p1[i] + 0.3 * p0[i] - pdef[i]) < 0.02
 
 
+def test_fit_falls_back_gracefully_when_models_unavailable(monkeypatch):
+    """When xgboost/statsmodels/sklearn fail to import (HAS_MODELS False,
+    e.g. a minimal deployment missing optional ML deps), fit() must not
+    raise — it should mark itself fitted with arima/xgb left unset."""
+    monkeypatch.setattr(forecaster_module, "HAS_MODELS", False)
+    fc = AegisForecaster()
+    result = fc.fit()
+    assert result is fc
+    assert fc.fitted is True
+    assert fc.arima is None
+    assert fc.xgb is None
+
+
 def test_get_forecaster_returns_singleton():
     fc1 = get_forecaster()
     fc2 = get_forecaster()
@@ -75,4 +89,3 @@ def test_forecast_horizon_bounds_respected(forecaster):
     itself should also behave sanely at the edges."""
     result = forecaster.forecast(horizon_days=1, crisis_shock=0.0, disruption_factor=0.0)
     assert len(result["forecast"]) == 1
-
