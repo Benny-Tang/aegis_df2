@@ -2,9 +2,9 @@
 testpaths = ["tests"]
 
 [tool.coverage.run]
-source = ["agents", "api", "models"]
+source = ["agents", "api", "models", "experiments"]
 omit = ["tests/*"]
 
 [tool.coverage.report]
-fail_under = 60
+fail_under = 65
 show_missing = true
