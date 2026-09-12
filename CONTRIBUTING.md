@@ -6,7 +6,7 @@
 git clone <this-repo>
 cd aegis_df4
 python3.12 -m venv .venv && source .venv/bin/activate
-pip install -r requirements-lock.txt   # full hashed closure (runtime + dev tooling)
+pip install -r requirements-lock.txt - machine-generated full dependency closure with exact pins (covers runtime + dev).
 pip install -r requirements-dev.txt
 cp .env.example .env                   # then fill in GROQ_API_KEY
 ```
