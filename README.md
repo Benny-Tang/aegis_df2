@@ -86,7 +86,7 @@ aegis_df4/
 ├── docker-compose.yml
 ├── requirements.txt
 ├── requirements-dev.txt    # pytest, pytest-cov, ruff, pip-audit, PyYAML
-├── requirements-lock.txt   # pip-compile generated, hashed, reproducible
+├── requirements-lock.txt   # pip-compile full closure (runtime + dev, exact pins)
 ├── pyproject.toml          # pytest + coverage configuration
 ├── ruff.toml
 ├── .env.example
