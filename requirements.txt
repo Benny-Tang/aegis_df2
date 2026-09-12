@@ -1,6 +1,6 @@
 # Direct runtime dependencies — exact pins (source of truth).
-# Regenerate the hashed lockfile after changing this file:
-#   pip-compile --allow-unsafe --generate-hashes requirements.txt requirements-dev.txt -o requirements-lock.txt
+# Regenerate the lockfile after changing this file:
+#   pip-compile --allow-unsafe requirements.txt requirements-dev.txt -o requirements-lock.txt
 # (run under Python 3.12)
 aiofiles==25.1.0
 beautifulsoup4==4.15.0
