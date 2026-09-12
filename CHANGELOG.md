@@ -1,5 +1,15 @@
 # Changelog
 
+## [Unreleased] — round 5
+
+### Changed
+- `requirements-lock.txt` regenerated without `--generate-hashes` — compact exact-pin lockfile (~10 KB) that dependency tooling detects; install behavior unchanged
+- README/CONTRIBUTING/requirements.txt comments updated to match
+
+### Added
+- mypy static type checking: `[tool.mypy]` config in pyproject.toml, type errors resolved, and a `typecheck` job in CI
+- `tests/test_pipeline.py` — 7-agent orchestration tests: pipeline completes with malformed LLM stubs, schema-validation warnings asserted via caplog, no real Groq calls
+
 ## [Unreleased] — round 2
 
 ### Added
