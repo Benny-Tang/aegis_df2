@@ -15,7 +15,7 @@ This repo standardizes on Python 3.12. If you change `requirements.txt`,
 regenerate the lockfile under Python 3.12:
 
 ```bash
-pip-compile requirements.txt requirements-dev.txt --generate-hashes -o requirements-lock.txt
+pip-compile --allow-unsafe requirements.txt requirements-dev.txt -o requirements-lock.txt
 ```
 
 ## Running the app
